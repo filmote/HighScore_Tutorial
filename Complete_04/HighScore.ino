@@ -1,21 +1,13 @@
 #include <Arduboy2.h>
 
-
 // Defines ----------------------------------------------------------------------
 
-#define EEPROM_GUARD_LETTER_1         'X'
-#define EEPROM_GUARD_LETTER_2         'Y'
-#define EEPROM_START                  EEPROM_STORAGE_SPACE_START + 300
-#define EEPROM_START_C1               EEPROM_START
-#define EEPROM_START_C2               EEPROM_START + 1
-#define EEPROM_TOP_START              EEPROM_START + 2
-#define EEPROM_ENTRY_SIZE             5
 #define DO_NOT_EDIT_SLOT              255
 #define MAX_NUMBER_OF_SLOTS           5
 
 
 // -------------------------------------------------------------------------------
-// Slot structure.  Holds a single high score entry
+// Slot structure.  Holds a single high score entry.
 
 struct Slot {
   
@@ -72,62 +64,35 @@ struct Slot {
 // Utilities to read and write detqails to the EEPROM
 
 struct EEPROM_Utils {
+
+  Slot slots[5];    
     
-    
- /* -----------------------------------------------------------------------------
-  *   Is the EEPROM initialised?
-  *
-  *   Looks for the characters 'X' and 'Y' in the first two bytes of the EEPROM
-  *   memory range starting from byte EEPROM_START.  If not found, it resets the
-  *   settings back to default ..
-  */
+
+  // Initiliase the EEPROM (well the array anyway) ..
+
   void initEEPROM() {
 
-    uint8_t c1 = EEPROM.read(EEPROM_START_C1);
-    uint8_t c2 = EEPROM.read(EEPROM_START_C2);
-
-    if (c1 != EEPROM_GUARD_LETTER_1 || c2 != EEPROM_GUARD_LETTER_2) {
-
-      uint16_t score = 0;
-      EEPROM.update(EEPROM_START_C1, EEPROM_GUARD_LETTER_1);
-      EEPROM.update(EEPROM_START_C2, EEPROM_GUARD_LETTER_2);
-
-      for (uint8_t x = 0; x < MAX_NUMBER_OF_SLOTS; x++) {
-
-        EEPROM.update(EEPROM_TOP_START + (EEPROM_ENTRY_SIZE * x),     'A' + x);
-        EEPROM.update(EEPROM_TOP_START + (EEPROM_ENTRY_SIZE * x) + 1, 'A' + x);
-        EEPROM.update(EEPROM_TOP_START + (EEPROM_ENTRY_SIZE * x) + 2, 'A' + x);
-
-        score = MAX_NUMBER_OF_SLOTS - x;
-        EEPROM.put(EEPROM_TOP_START + (EEPROM_ENTRY_SIZE * x) + 3, score);
-
-      }
-
+    for (uint8_t i = 0; i < MAX_NUMBER_OF_SLOTS; i++) {
+      slots[i].chars[0] = 'A' + i;
+      slots[i].chars[1] = 'A' + i;
+      slots[i].chars[2] = 'A' + i;
+      slots[i].score = 5 - i;
     }
 
   }
 
 
- /* -----------------------------------------------------------------------------
-  *   Get details of slot number x.
-  */
-  void getSlot(uint8_t x, Slot &slot) {
+  // Get details of slot number x.
+  
+  Slot &getSlot(uint8_t x) {
 
-    slot.chars[0] = EEPROM.read(EEPROM_TOP_START + (EEPROM_ENTRY_SIZE * x));
-    slot.chars[1] = EEPROM.read(EEPROM_TOP_START + (EEPROM_ENTRY_SIZE * x) + 1);
-    slot.chars[2] = EEPROM.read(EEPROM_TOP_START + (EEPROM_ENTRY_SIZE * x) + 2);
-
-    uint16_t score = 0;
-    EEPROM.get(EEPROM_TOP_START + (EEPROM_ENTRY_SIZE * x) + 3, score);
-    slot.score = score;
+    return slots[x];
 
   }
 
 
- /* -----------------------------------------------------------------------------
-  *   Save score and return index.  if the reserved value DO_NOT_EDIT_SLOT (255)
-  *   is returned, it means the score provided was not good enough!
-  */
+  // Test to see if hte new score deserves a place on the high score table, if so make room for it and return the index ..
+  
   uint8_t saveScore(uint16_t score) {
 
     uint8_t newIndex = DO_NOT_EDIT_SLOT;
@@ -137,10 +102,9 @@ struct EEPROM_Utils {
 
     for (uint8_t x = 0; x < MAX_NUMBER_OF_SLOTS; x++) {
 
-      uint16_t slotScore = 0;
-      EEPROM.get(EEPROM_TOP_START + (EEPROM_ENTRY_SIZE * x) + 3, slotScore);
+      Slot test = getSlot(x);
 
-      if (slotScore <= score) {
+      if (test.score <= score) {
 
         newIndex = x;
         break;
@@ -156,41 +120,39 @@ struct EEPROM_Utils {
 
       for (uint8_t x = MAX_NUMBER_OF_SLOTS - 1; x > newIndex; x--) {
 
-        Slot slot;
-        getSlot(x - 1, slot);
-
-        EEPROM.update(EEPROM_TOP_START + (EEPROM_ENTRY_SIZE * x), slot.chars[0]);
-        EEPROM.update(EEPROM_TOP_START + (EEPROM_ENTRY_SIZE * x) + 1, slot.chars[1]);
-        EEPROM.update(EEPROM_TOP_START + (EEPROM_ENTRY_SIZE * x) + 2, slot.chars[2]);
-        EEPROM.put(EEPROM_TOP_START + (EEPROM_ENTRY_SIZE * x) + 3, slot.score);
+        Slot slot = getSlot(x - 1);
+        slot.slotNumber = x;
+        saveSlot(slot);
 
       }
 
 
       // .. and save the new score with the default AAA name ..
 
-      EEPROM.update(EEPROM_TOP_START + (EEPROM_ENTRY_SIZE * newIndex), 'A');
-      EEPROM.update(EEPROM_TOP_START + (EEPROM_ENTRY_SIZE * newIndex) + 1, 'A');
-      EEPROM.update(EEPROM_TOP_START + (EEPROM_ENTRY_SIZE * newIndex) + 2, 'A');
-      EEPROM.put(EEPROM_TOP_START + (EEPROM_ENTRY_SIZE * newIndex) + 3, score);
-      
+      Slot newSlot;
+      newSlot.slotNumber = newIndex;
+      newSlot.chars[0] = 'A';
+      newSlot.chars[1] = 'A';
+      newSlot.chars[2] = 'A';
+      newSlot.score = score;
+      saveSlot(newSlot);
 
     }
 
     return newIndex;
 
+
   }
 
 
- /* -----------------------------------------------------------------------------
-  *   Save score characters only.  The score itself was saved when we created the 
-  *   located the spot in the first place.
-  */
-  void writeChars(Slot &highscore) {
+  // Save a slot ..
+  
+  void saveSlot(Slot &slot) {
 
-      EEPROM.update(EEPROM_TOP_START + (EEPROM_ENTRY_SIZE * highscore.slotNumber), highscore.chars[0]);
-      EEPROM.update(EEPROM_TOP_START + (EEPROM_ENTRY_SIZE * highscore.slotNumber) + 1, highscore.chars[1]);
-      EEPROM.update(EEPROM_TOP_START + (EEPROM_ENTRY_SIZE * highscore.slotNumber) + 2, highscore.chars[2]);
+      slots[slot.slotNumber].chars[0] = slot.chars[0];
+      slots[slot.slotNumber].chars[1] = slot.chars[1];
+      slots[slot.slotNumber].chars[2] = slot.chars[2];
+      slots[slot.slotNumber].score = slot.score;
 
   }
 
@@ -364,6 +326,7 @@ void playGame() {
 void highScore_Init() {
 
   highScoreVars.slot.reset();
+  highScoreVars.slot.score = gamePlayVars.score;
   highScoreVars.slot.slotNumber = eeprom_Utils.saveScore(gamePlayVars.score);
 
   gameState = GameState::HighScore;
@@ -377,8 +340,7 @@ void highScore() {
 
   for (uint8_t x = 0; x < MAX_NUMBER_OF_SLOTS; x++) {
 
-    Slot slot;
-    eeprom_Utils.getSlot(x, slot);
+    Slot slot = eeprom_Utils.getSlot(x);
 
     arduboy.setCursor(xOffset, yOffset);
 
@@ -425,8 +387,6 @@ void highScore() {
 
   if (highScoreVars.slot.slotNumber != DO_NOT_EDIT_SLOT) {
 
-    uint8_t charIndex = highScoreVars.slot.charIndex;
-
     if (arduboy.justPressed(UP_BUTTON))       { highScoreVars.slot.incChar(); }
     if (arduboy.justPressed(DOWN_BUTTON))     { highScoreVars.slot.decChar(); }
     if (arduboy.justPressed(LEFT_BUTTON))     { highScoreVars.slot.decCharIndex(); } 
@@ -434,7 +394,7 @@ void highScore() {
 
     if (arduboy.justPressed(A_BUTTON)) { 
       
-      eeprom_Utils.writeChars(highScoreVars.slot);
+      eeprom_Utils.saveSlot(highScoreVars.slot);
       highScoreVars.slot.reset(); 
       gamePlayVars.reset();
       
