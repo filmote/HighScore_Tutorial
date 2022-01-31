@@ -1,0 +1,7 @@
+"title": "High Score: Getting Started with the EEPROM",
+"type":"COURSE",
+"summary":"Reading and writing values to non-volatile EEPROM memory.",
+"tags":["Intermediate","Game"],
+"durationInMinutes": 5,
+"compileEntryPath":"HighScore.ino",
+"workFilePath":"ExampleCode/HighScore.ino"

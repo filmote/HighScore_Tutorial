@@ -95,21 +95,7 @@ uint8_t saveScore(uint16_t score) {
 
   uint8_t newIndex = DO_NOT_EDIT_SLOT;
 
-
-  // Look to see if the provided score is higher than any existing ones ..
-
-  for (uint8_t x = 0; x < MAX_NUMBER_OF_SLOTS; x++) {
-
-    Slot test = getSlot(x);
-
-    if (test.score <= score) {
-
-      newIndex = x;
-      break;
-
-    }
-
-  }
+  // Your Turn: iterate through the high score table to determine if the new score should be saved.
 
 
   // If a slot was found then ripple all those below it down ..
@@ -146,10 +132,10 @@ uint8_t saveScore(uint16_t score) {
 
 void saveSlot(Slot &slotToSave) {
 
-    slots[slotToSave.index].chars[0] = slotToSave.chars[0];
-    slots[slotToSave.index].chars[1] = slotToSave.chars[1];
-    slots[slotToSave.index].chars[2] = slotToSave.chars[2];
-    slots[slotToSave.index].score = slotToSave.score;
+  slots[slotToSave.index].chars[0] = slotToSave.chars[0];
+  slots[slotToSave.index].chars[1] = slotToSave.chars[1];
+  slots[slotToSave.index].chars[2] = slotToSave.chars[2];
+  slots[slotToSave.index].score = slotToSave.score;
 
 }
 

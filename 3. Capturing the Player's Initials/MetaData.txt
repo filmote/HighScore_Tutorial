@@ -1,0 +1,7 @@
+"title": "High Score: Capturing the Player's Initials",
+"type":"COURSE",
+"summary":"Capture the player's initials and sore them in the table.",
+"tags":["Intermediate","Game"],
+"durationInMinutes": 5,
+"compileEntryPath":"HighScore.ino",
+"workFilePath":"ExampleCode/HighScore.ino"

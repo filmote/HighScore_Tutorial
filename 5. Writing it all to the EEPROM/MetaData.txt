@@ -1,0 +1,7 @@
+"title": "High Score: Write it all to the EEPROM",
+"type":"COURSE",
+"summary":"Finish the development by writing it all to the EEPROM.",
+"tags":["Intermediate","Game"],
+"durationInMinutes": 5,
+"compileEntryPath":"HighScore.ino",
+"workFilePath":"ExampleCode/HighScore.ino"

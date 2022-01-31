@@ -15,8 +15,6 @@ struct Slot {
 
   void reset() {
 
-    this->index = DO_NOT_EDIT_SLOT;
-    this->charIndex = 0;
     this->chars[0] = 'A';
     this->chars[1] = 'A';
     this->chars[2] = 'A';
@@ -61,7 +59,6 @@ return slots[x];
 // -------------------------------------------------------------------------------
 
 Arduboy2 arduboy;
-EEPROM_Utils eeprom_Utils;
 
 enum GameState {
   Title_Init,

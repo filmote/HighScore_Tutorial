@@ -92,7 +92,7 @@ void title() {
 // --------------------------------------------------------------------------------------
 //  High Score state
 //
-void initHighScoreTable() {
+void highScore_Init() {
 
   uint16_t score = 1234;
 

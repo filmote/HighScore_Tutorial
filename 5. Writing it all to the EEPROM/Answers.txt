@@ -178,11 +178,10 @@ uint8_t saveScore(uint16_t score) {
 
 void saveSlot(Slot &slotToSave) {
 
-    EEPROM.update(EEPROM_SCORES_START + (EEPROM_ENTRY_SIZE * slotToSave.index), slotToSave.chars[0]);
-    EEPROM.update(EEPROM_SCORES_START + (EEPROM_ENTRY_SIZE * slotToSave.index) + 1, slotToSave.chars[1]);
-    EEPROM.update(EEPROM_SCORES_START + (EEPROM_ENTRY_SIZE * slotToSave.index) + 2, slotToSave.chars[2]);
-    EEPROM.update(EEPROM_SCORES_START + (EEPROM_ENTRY_SIZE * slotToSave.index), slotToSave.chars[0]);
-    EEPROM.put(EEPROM_SCORES_START + (EEPROM_ENTRY_SIZE * slotToSave.index) + 3, slotToSave.score);
+  EEPROM.update(EEPROM_SCORES_START + (EEPROM_ENTRY_SIZE * slotToSave.index), slotToSave.chars[0]);
+  EEPROM.update(EEPROM_SCORES_START + (EEPROM_ENTRY_SIZE * slotToSave.index) + 1, slotToSave.chars[1]);
+  EEPROM.update(EEPROM_SCORES_START + (EEPROM_ENTRY_SIZE * slotToSave.index) + 2, slotToSave.chars[2]);
+  EEPROM.put(EEPROM_SCORES_START + (EEPROM_ENTRY_SIZE * slotToSave.index) + 3, slotToSave.score);
 
 }
 

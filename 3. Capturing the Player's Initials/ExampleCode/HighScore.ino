@@ -57,7 +57,7 @@ Slot slots[5];
 
 // Initiliase the EEPROM (well the array anyway) ..
 
-void highScoreTable_Init() {
+void initHighScoreTable() {
 
   for (uint8_t i = 0; i < MAX_NUMBER_OF_SLOTS; i++) {
     slots[i].chars[0] = 'A' + i;

@@ -1,0 +1,7 @@
+"title": "High Score: Where Should the New Entry Go?",
+"type":"COURSE",
+"summary":"Work out how the new score ranks and create a space in the high score table for it.",
+"tags":["Intermediate","Game"],
+"durationInMinutes": 5,
+"compileEntryPath":"HighScore.ino",
+"workFilePath":"ExampleCode/HighScore.ino"

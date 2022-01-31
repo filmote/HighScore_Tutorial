@@ -1,0 +1,7 @@
+"title": "High Score: Creating a High Score Table",
+"type":"COURSE",
+"summary":"Create an array of high score entries in memory.",
+"tags":["Intermediate","Game"],
+"durationInMinutes": 5,
+"compileEntryPath":"HighScore.ino",
+"workFilePath":"ExampleCode/HighScore.ino"
