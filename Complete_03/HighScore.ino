@@ -11,7 +11,7 @@
 
 struct Slot {
   
-  uint8_t slotNumber;
+  uint8_t index;
   uint8_t charIndex;
   uint8_t chars[3];
   uint16_t score;
@@ -20,9 +20,7 @@ struct Slot {
     if (this->charIndex < 2) this->charIndex++;
   }
 
-  void decCharIndex() {
-    if (this->charIndex > 0) this->charIndex--;
-  }
+  // Your Turn: Add a decCharIndex() function
 
   void incChar() {
     
@@ -35,20 +33,11 @@ struct Slot {
 
   }
 
-  void decChar() {
-    
-    if (this->chars[this->charIndex] == 'A') {
-      this->chars[this->charIndex] = 'Z'; 
-    } 
-    else { 
-      this->chars[this->charIndex]--;
-    } 
-
-  }
+  // Your Turn: Add a decChar() function
 
   void reset() {
 
-    this->slotNumber = DO_NOT_EDIT_SLOT;
+    this->index = DO_NOT_EDIT_SLOT;
     this->charIndex = 0;
     this->chars[0] = 'A';
     this->chars[1] = 'A';
@@ -63,67 +52,60 @@ struct Slot {
 // -------------------------------------------------------------------------------
 // Utilities to read and write detqails to the EEPROM
 
-struct EEPROM_Utils {
-
-  Slot slots[5];    
-    
-
-  // Initiliase the EEPROM (well the array anyway) ..
-
-  void initEEPROM() {
-
-    for (uint8_t i = 0; i < MAX_NUMBER_OF_SLOTS; i++) {
-      slots[i].chars[0] = 'A' + i;
-      slots[i].chars[1] = 'A' + i;
-      slots[i].chars[2] = 'A' + i;
-      slots[i].score = 5 - i;
-    }
-
-  }
-
-
-  // Get details of slot number x.
+Slot slots[5];    
   
-  Slot &getSlot(uint8_t x) {
 
-    return slots[x];
+// Initiliase the EEPROM (well the array anyway) ..
+
+void highScoreTable_Init() {
+
+  for (uint8_t i = 0; i < MAX_NUMBER_OF_SLOTS; i++) {
+    slots[i].chars[0] = 'A' + i;
+    slots[i].chars[1] = 'A' + i;
+    slots[i].chars[2] = 'A' + i;
+    slots[i].score = 5 - i;
+  }
+
+}
+
+
+// Get details of slot number x.
+
+Slot getSlot(uint8_t x) {
+
+  return slots[x];
+
+}
+
+
+// Save the new score in a random position ..
+
+uint8_t saveScore(uint16_t score) {
+
+  uint8_t newIndex = DO_NOT_EDIT_SLOT;
+
+  if (score > 0) {
+
+    newIndex = random(0, MAX_NUMBER_OF_SLOTS);
+    // Your Turn: Save the new score and reset the initials to 'AAA' ..
 
   }
 
+  return newIndex;
 
-  // Save the new score in a random position ..
-  
-  uint8_t saveScore(uint16_t score) {
-
-    uint8_t newIndex = DO_NOT_EDIT_SLOT;
-
-    if (score > 0) {
-
-      newIndex = random(0, MAX_NUMBER_OF_SLOTS);
-      slots[newIndex].chars[0] = 'A';
-      slots[newIndex].chars[1] = 'A';
-      slots[newIndex].chars[2] = 'A';      
-      slots[newIndex].score = score;
-
-    }
-
-    return newIndex;
-
-  }
+}
 
 
-  // Save a slot ..
-  
-  void saveSlot(Slot &slot) {
+// Save a slot ..
 
-      slots[slot.slotNumber].chars[0] = slot.chars[0];
-      slots[slot.slotNumber].chars[1] = slot.chars[1];
-      slots[slot.slotNumber].chars[2] = slot.chars[2];
-      slots[slot.slotNumber].score = slot.score;
+void saveSlot(Slot &slotToSave) {
 
-  }
+    slots[slotToSave.index].chars[0] = slotToSave.chars[0];
+    slots[slotToSave.index].chars[1] = slotToSave.chars[1];
+    slots[slotToSave.index].chars[2] = slotToSave.chars[2];
+    slots[slotToSave.index].score = slotToSave.score;
 
-};
+}
 
 
 // -------------------------------------------------------------------------------
@@ -131,7 +113,6 @@ struct EEPROM_Utils {
 // -------------------------------------------------------------------------------
 
 Arduboy2 arduboy;
-EEPROM_Utils eeprom_Utils;
 
 enum GameState {
   Title_Init,
@@ -169,20 +150,20 @@ GameState gameState = GameState::Title_Init;
 
 void setup() {
 
-	arduboy.boot();
-  eeprom_Utils.initEEPROM();
+  arduboy.boot();
+  initHighScoreTable();
 
-	gameState = GameState::Title_Init; 
+  gameState = GameState::Title_Init; 
 
 }
 
 void loop() {
 
-	if (!arduboy.nextFrame()) return;
-	arduboy.pollButtons();
+  if (!arduboy.nextFrame()) return;
+  arduboy.pollButtons();
   arduboy.clear();
 
-	switch (gameState) {
+  switch (gameState) {
 
     case GameState::Title_Init:
       title_Init();
@@ -192,25 +173,25 @@ void loop() {
       title();
       break;
 
-		case GameState::PlayGame_Init: 
+    case GameState::PlayGame_Init: 
       playGame_Init();
       [[fallthrough]]
 
-		case GameState::PlayGame: 
+    case GameState::PlayGame: 
       playGame();
-			break;
+      break;
 
-		case GameState::HighScore_Init: 
+    case GameState::HighScore_Init: 
       highScore_Init();
       [[fallthrough]]
 
-		case GameState::HighScore: 
+    case GameState::HighScore: 
       highScore();
-			break;
+      break;
 
-		default: break;	
+    default: break;  
 
-	}
+  }
 
   arduboy.display();
 
@@ -228,15 +209,15 @@ void title_Init() {
 
 void title() {
 
-	// Handle input ..
+  // Handle input ..
 
-	if (arduboy.justPressed(A_BUTTON)) {
+  if (arduboy.justPressed(A_BUTTON)) {
     gameState = GameState::PlayGame_Init;
-	}
+  }
 
-	if (arduboy.justPressed(B_BUTTON)) {
+  if (arduboy.justPressed(B_BUTTON)) {
     gameState = GameState::HighScore_Init;
-	}
+  }
 
   // Render screen ..
 
@@ -262,19 +243,19 @@ void playGame_Init() {
 void playGame() { 
 
 
-	// Handle input ..
+  // Handle input ..
 
-	if (arduboy.justPressed(UP_BUTTON)) {
+  if (arduboy.justPressed(UP_BUTTON)) {
     gamePlayVars.score++;
-	}
+  }
 
-	if (arduboy.justPressed(DOWN_BUTTON)) {
+  if (arduboy.justPressed(DOWN_BUTTON)) {
     gamePlayVars.score--;
-	}
+  }
 
-	if (arduboy.justPressed(A_BUTTON)) {
+  if (arduboy.justPressed(A_BUTTON)) {
     gameState = GameState::HighScore_Init;
-	}
+  }
 
 
   // Render screen ..
@@ -295,7 +276,7 @@ void highScore_Init() {
 
   highScoreVars.slot.reset();
   highScoreVars.slot.score = gamePlayVars.score;
-  highScoreVars.slot.slotNumber = eeprom_Utils.saveScore(gamePlayVars.score);
+  highScoreVars.slot.index = saveScore(gamePlayVars.score);
 
   gameState = GameState::HighScore;
 
@@ -308,14 +289,11 @@ void highScore() {
 
   for (uint8_t x = 0; x < MAX_NUMBER_OF_SLOTS; x++) {
 
-    Slot slot = eeprom_Utils.getSlot(x);
+    Slot slot = getSlot(x);
 
     arduboy.setCursor(xOffset, yOffset);
 
-    if (x != highScoreVars.slot.slotNumber) {
-
-
-      // Render existing score details ..
+    if (x != highScoreVars.slot.index) {
 
       arduboy.print(static_cast<char>(slot.chars[0]));
       arduboy.print(static_cast<char>(slot.chars[1]));
@@ -324,13 +302,7 @@ void highScore() {
     }
     else {
 
-      // Render new deatils ..
-
-      arduboy.print(static_cast<char>(highScoreVars.slot.chars[0]));
-      arduboy.print(static_cast<char>(highScoreVars.slot.chars[1]));
-      arduboy.print(static_cast<char>(highScoreVars.slot.chars[2]));
-
-      // Render underline ..
+      // Your Turn: render the initials from the highScoreVars.slot variable.  This is the one being editted ..
 
       arduboy.drawFastHLine(xOffset + (highScoreVars.slot.charIndex * 6), yOffset - 2, 5);
       arduboy.drawFastHLine(xOffset + (highScoreVars.slot.charIndex * 6), yOffset + 8, 5);
@@ -353,18 +325,16 @@ void highScore() {
 
   // Handle buttons ..
 
-  if (highScoreVars.slot.slotNumber != DO_NOT_EDIT_SLOT) {
+  if (highScoreVars.slot.index != DO_NOT_EDIT_SLOT) {
 
     uint8_t charIndex = highScoreVars.slot.charIndex;
 
     if (arduboy.justPressed(UP_BUTTON))       { highScoreVars.slot.incChar(); }
-    if (arduboy.justPressed(DOWN_BUTTON))     { highScoreVars.slot.decChar(); }
-    if (arduboy.justPressed(LEFT_BUTTON))     { highScoreVars.slot.decCharIndex(); } 
-    if (arduboy.justPressed(RIGHT_BUTTON))    { highScoreVars.slot.incCharIndex(); } 
+    // Your Turn: Handle the Left, Right and Down buttons.
 
     if (arduboy.justPressed(A_BUTTON)) { 
       
-      eeprom_Utils.saveSlot(highScoreVars.slot);
+      saveSlot(highScoreVars.slot);
       highScoreVars.slot.reset(); 
       gamePlayVars.reset();
       

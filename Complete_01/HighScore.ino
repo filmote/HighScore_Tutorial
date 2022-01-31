@@ -23,18 +23,18 @@ GameState gameState = GameState::Title_Init;
 
 void setup() {
 
-	arduboy.boot();
-	gameState = GameState::Title_Init; 
+  arduboy.boot();
+  gameState = GameState::Title_Init; 
 
 }
 
 void loop() {
 
-	if (!arduboy.nextFrame()) return;
-	arduboy.pollButtons();
+  if (!arduboy.nextFrame()) return;
+  arduboy.pollButtons();
   arduboy.clear();
 
-	switch (gameState) {
+  switch (gameState) {
 
     case GameState::Title_Init:
       title_Init();
@@ -44,17 +44,17 @@ void loop() {
       title();
       break;
 
-		case GameState::HighScore_Init: 
+    case GameState::HighScore_Init: 
       highScore_Init();
       [[fallthrough]]
 
-		case GameState::HighScore: 
+    case GameState::HighScore: 
       highScore();
-			break;
+      break;
 
-		default: break;	
+    default: break;  
 
-	}
+  }
 
   arduboy.display();
 
@@ -72,11 +72,11 @@ void title_Init() {
 
 void title() {
 
-	// Handle input ..
+  // Handle input ..
 
-	if (arduboy.justPressed(B_BUTTON)) {
+  if (arduboy.justPressed(B_BUTTON)) {
     gameState = GameState::HighScore_Init;
-	}
+  }
 
   // Render screen ..
 
@@ -96,10 +96,7 @@ void highScore_Init() {
 
   uint16_t score = 1234;
 
-  EEPROM.update(EEPROM_START,     'A');
-  EEPROM.update(EEPROM_START + 1, 'B');
-  EEPROM.update(EEPROM_START + 2, 'C');
-  EEPROM.put(EEPROM_START + 3,    score);
+  // Your Turn: Save data to the EEPROM
 
   gameState = GameState::HighScore;
 
@@ -107,30 +104,25 @@ void highScore_Init() {
 
 void highScore() {
 
-  uint16_t score;
-
   arduboy.setCursor(28, 20);
 
   arduboy.print(static_cast<char>(EEPROM.read(EEPROM_START)));
+  
+  // Your Turn: Retrieve and print initials 2 & 3 ..
+
   arduboy.print(static_cast<char>(EEPROM.read(EEPROM_START + 1)));
   arduboy.print(static_cast<char>(EEPROM.read(EEPROM_START + 2)));
 
-  EEPROM.get(EEPROM_START + 3, score);
-
   arduboy.setCursor(68, 20);
 
-  if (score < 1000)  arduboy.print("0");
-  if (score < 100)   arduboy.print("0");
-  if (score < 10)    arduboy.print("0");
-
-  arduboy.print(score);
+  // Your Turn: Retrieve and print the score ..
 
 
-	// Handle input ..
+  // Handle input ..
 
-	if (arduboy.justPressed(A_BUTTON) || arduboy.justPressed(B_BUTTON)) {
+  if (arduboy.justPressed(A_BUTTON) || arduboy.justPressed(B_BUTTON)) {
     gameState = GameState::Title_Init;
-	}
+  }
 
 
 }

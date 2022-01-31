@@ -88,7 +88,11 @@ void initHighScoreTable() {
     for (uint8_t x = 0; x < MAX_NUMBER_OF_SLOTS; x++) {
 
       EEPROM.update(EEPROM_SCORES_START + (EEPROM_ENTRY_SIZE * x),     'A' + x);
-      // Your Turn: Complete the initialisation of each slot.
+      EEPROM.update(EEPROM_SCORES_START + (EEPROM_ENTRY_SIZE * x) + 1, 'A' + x);
+      EEPROM.update(EEPROM_SCORES_START + (EEPROM_ENTRY_SIZE * x) + 2, 'A' + x);
+
+      score = MAX_NUMBER_OF_SLOTS - x;
+      EEPROM.put(EEPROM_SCORES_START + (EEPROM_ENTRY_SIZE * x) + 3, score);
 
     }
 
@@ -104,7 +108,13 @@ Slot getSlot(uint8_t x) {
   Slot slot;
 
   slot.index = x;
-  // Your Turn: retrieve the slot details from the EEPROM and populate the slot variable.
+  slot.chars[0] = EEPROM.read(EEPROM_SCORES_START + (EEPROM_ENTRY_SIZE * x));
+  slot.chars[1] = EEPROM.read(EEPROM_SCORES_START + (EEPROM_ENTRY_SIZE * x) + 1);
+  slot.chars[2] = EEPROM.read(EEPROM_SCORES_START + (EEPROM_ENTRY_SIZE * x) + 2);
+
+  uint16_t score = 0;
+  EEPROM.get(EEPROM_SCORES_START + (EEPROM_ENTRY_SIZE * x) + 3, score);
+  slot.score = score;
 
   return slot;
 

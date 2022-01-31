@@ -1,49 +1,9 @@
 #include <Arduboy2.h>
 
+
 // Defines ----------------------------------------------------------------------
 
-#define MAX_NUMBER_OF_SLOTS           5
-
-
-// -------------------------------------------------------------------------------
-// Slot structure.  Holds a single high score entry.
-
-struct Slot {
-  
-  uint8_t chars[3];
-  uint16_t score;
-
-  void reset() {
-    
-    // Your Turn: provide code to reset the slot structure.
-
-  }
-
-};
-
-
-// -------------------------------------------------------------------------------
-// Utilities to read and write details to the EEPROM
-
-Slot slots[MAX_NUMBER_OF_SLOTS];    
-  
-
-// Initiliase the EEPROM (well the array anyway) ..
-
-void initHighScoreTable() {
-
-  // Your Turn: copy and paste the initialisation code from the instructions
-
-}
-
-
-// Get details of slot number x.
-
-Slot getSlot(uint8_t x) {
-
-  return slots[x];
-
-}
+#define EEPROM_START                  EEPROM_STORAGE_SPACE_START + 300
 
 
 // -------------------------------------------------------------------------------
@@ -59,36 +19,11 @@ enum GameState {
   HighScore,
 };
 
-struct TitleScreenVars { };
-
-struct GamePlayVars {
-
-  uint8_t score = 0;
-
-  void reset() {
-    score = 0;
-  }
-  
-};
-
-struct HighScoreVars {
-
-  Slot slot;
-
-};
-
-TitleScreenVars titleScreenVars;
-GamePlayVars gamePlayVars;
-HighScoreVars highScoreVars;
-
 GameState gameState = GameState::Title_Init;
-
 
 void setup() {
 
   arduboy.boot();
-  initHighScoreTable();
-
   gameState = GameState::Title_Init; 
 
 }
@@ -157,35 +92,45 @@ void title() {
 // --------------------------------------------------------------------------------------
 //  High Score state
 //
-void highScore_Init() {
+void initHighScoreTable() {
+
+  uint16_t score = 1234;
+
+  EEPROM.update(EEPROM_START,     'A');
+  EEPROM.update(EEPROM_START + 1, 'B');
+  EEPROM.update(EEPROM_START + 2, 'C');
+  EEPROM.put(EEPROM_START + 3,    score);
 
   gameState = GameState::HighScore;
 
 }
 
 void highScore() {
-
-  uint8_t xOffset = 28;
-  uint8_t yOffset = 3;
-
-  for (uint8_t x = 0; x < MAX_NUMBER_OF_SLOTS; x++) {
-
-    Slot slot = getSlot(x);
     
-    // Your Turn: retrieve and render all slots
+  arduboy.setCursor(28, 20);
 
-    yOffset = yOffset + 12;
+  arduboy.print(static_cast<char>(EEPROM.read(EEPROM_START)));
+  arduboy.print(static_cast<char>(EEPROM.read(EEPROM_START + 1)));
+  arduboy.print(static_cast<char>(EEPROM.read(EEPROM_START + 2)));
 
+  arduboy.setCursor(68, 20);
+
+  uint16_t score;
+  EEPROM.get(EEPROM_START + 3, score);
+
+  if (score < 1000)  arduboy.print("0");
+  if (score < 100)   arduboy.print("0");
+  if (score < 10)    arduboy.print("0");
+
+  arduboy.print(score);
+
+
+  // Handle input ..
+
+  if (arduboy.justPressed(A_BUTTON) || arduboy.justPressed(B_BUTTON)) {
+    gameState = GameState::Title_Init;
   }
 
-
-  // Handle buttons ..
-
-  if (arduboy.justPressed(A_BUTTON) || arduboy.justPressed(B_BUTTON)) { 
-  
-    gameState = GameState::Title_Init; 
-    
-  }
 
 }
 

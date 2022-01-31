@@ -14,8 +14,13 @@ struct Slot {
   uint16_t score;
 
   void reset() {
-    
-    // Your Turn: provide code to reset the slot structure.
+
+    this->index = DO_NOT_EDIT_SLOT;
+    this->charIndex = 0;
+    this->chars[0] = 'A';
+    this->chars[1] = 'A';
+    this->chars[2] = 'A';
+    this->score = 0;
 
   }
 
@@ -26,13 +31,18 @@ struct Slot {
 // Utilities to read and write details to the EEPROM
 
 Slot slots[MAX_NUMBER_OF_SLOTS];    
-  
+
 
 // Initiliase the EEPROM (well the array anyway) ..
 
 void initHighScoreTable() {
 
-  // Your Turn: copy and paste the initialisation code from the instructions
+    for (uint8_t i = 0; i < MAX_NUMBER_OF_SLOTS; i++) {
+        slots[i].chars[0] = 'A' + i;
+        slots[i].chars[1] = 'A' + i;
+        slots[i].chars[2] = 'A' + i;
+        slots[i].score = 5 - i;
+    }
 
 }
 
@@ -41,7 +51,7 @@ void initHighScoreTable() {
 
 Slot getSlot(uint8_t x) {
 
-  return slots[x];
+return slots[x];
 
 }
 
@@ -51,10 +61,13 @@ Slot getSlot(uint8_t x) {
 // -------------------------------------------------------------------------------
 
 Arduboy2 arduboy;
+EEPROM_Utils eeprom_Utils;
 
 enum GameState {
   Title_Init,
   Title,
+  PlayGame_Init,
+  PlayGame,
   HighScore_Init,
   HighScore,
 };
@@ -171,8 +184,23 @@ void highScore() {
   for (uint8_t x = 0; x < MAX_NUMBER_OF_SLOTS; x++) {
 
     Slot slot = getSlot(x);
-    
-    // Your Turn: retrieve and render all slots
+
+
+    // Render existing score details ..
+
+    arduboy.setCursor(xOffset, yOffset);
+
+    arduboy.print(static_cast<char>(slot.chars[0]));
+    arduboy.print(static_cast<char>(slot.chars[1]));
+    arduboy.print(static_cast<char>(slot.chars[2]));
+
+    arduboy.setCursor(xOffset + 40, yOffset);
+
+    if (slot.score < 1000)  arduboy.print("0");
+    if (slot.score < 100)   arduboy.print("0");
+    if (slot.score < 10)    arduboy.print("0");
+
+    arduboy.print(slot.score);
 
     yOffset = yOffset + 12;
 

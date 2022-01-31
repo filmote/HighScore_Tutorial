@@ -11,7 +11,7 @@
 
 struct Slot {
   
-  uint8_t slotNumber;
+  uint8_t index;
   uint8_t charIndex;
   uint8_t chars[3];
   uint16_t score;
@@ -48,7 +48,7 @@ struct Slot {
 
   void reset() {
 
-    this->slotNumber = DO_NOT_EDIT_SLOT;
+    this->index = DO_NOT_EDIT_SLOT;
     this->charIndex = 0;
     this->chars[0] = 'A';
     this->chars[1] = 'A';
@@ -63,100 +63,81 @@ struct Slot {
 // -------------------------------------------------------------------------------
 // Utilities to read and write detqails to the EEPROM
 
-struct EEPROM_Utils {
+Slot slots[5];    
+  
 
-  Slot slots[5];    
-    
+// Initiliase the EEPROM (well the array anyway) ..
 
-  // Initiliase the EEPROM (well the array anyway) ..
+void initHighScoreTable() {
 
-  void initEEPROM() {
-
-    for (uint8_t i = 0; i < MAX_NUMBER_OF_SLOTS; i++) {
-      slots[i].chars[0] = 'A' + i;
-      slots[i].chars[1] = 'A' + i;
-      slots[i].chars[2] = 'A' + i;
-      slots[i].score = 5 - i;
-    }
-
+  for (uint8_t i = 0; i < MAX_NUMBER_OF_SLOTS; i++) {
+    slots[i].chars[0] = 'A' + i;
+    slots[i].chars[1] = 'A' + i;
+    slots[i].chars[2] = 'A' + i;
+    slots[i].score = 5 - i;
   }
 
-
-  // Get details of slot number x.
-  
-  Slot &getSlot(uint8_t x) {
-
-    return slots[x];
-
-  }
+}
 
 
-  // Test to see if hte new score deserves a place on the high score table, if so make room for it and return the index ..
-  
-  uint8_t saveScore(uint16_t score) {
+// Get details of slot number x.
 
-    uint8_t newIndex = DO_NOT_EDIT_SLOT;
+Slot getSlot(uint8_t x) {
+
+  return slots[x];
+
+}
 
 
-    // Look to see if the provided score is higher than any existing ones ..
+// Test to see if the new score deserves a place on the high score table, if so make room for it and return the index ..
 
-    for (uint8_t x = 0; x < MAX_NUMBER_OF_SLOTS; x++) {
+uint8_t saveScore(uint16_t score) {
 
-      Slot test = getSlot(x);
+  uint8_t newIndex = DO_NOT_EDIT_SLOT;
 
-      if (test.score <= score) {
+  // Your Turn: iterate through the high score table to determine if the new score should be saved.
 
-        newIndex = x;
-        break;
 
-      }
+  // If a slot was found then ripple all those below it down ..
+
+  if (newIndex < DO_NOT_EDIT_SLOT) {
+
+    for (uint8_t x = MAX_NUMBER_OF_SLOTS - 1; x > newIndex; x--) {
+
+      Slot slot = getSlot(x - 1);
+      slot.index = x;
+      saveSlot(slot);
 
     }
 
 
-    // If a slot was found then ripple all those below it down ..
+    // .. and save the new score with the default AAA name ..
 
-    if (newIndex < DO_NOT_EDIT_SLOT) {
-
-      for (uint8_t x = MAX_NUMBER_OF_SLOTS - 1; x > newIndex; x--) {
-
-        Slot slot = getSlot(x - 1);
-        slot.slotNumber = x;
-        saveSlot(slot);
-
-      }
-
-
-      // .. and save the new score with the default AAA name ..
-
-      Slot newSlot;
-      newSlot.slotNumber = newIndex;
-      newSlot.chars[0] = 'A';
-      newSlot.chars[1] = 'A';
-      newSlot.chars[2] = 'A';
-      newSlot.score = score;
-      saveSlot(newSlot);
-
-    }
-
-    return newIndex;
-
+    Slot newSlot;
+    newSlot.index = newIndex;
+    newSlot.chars[0] = 'A';
+    newSlot.chars[1] = 'A';
+    newSlot.chars[2] = 'A';
+    newSlot.score = score;
+    saveSlot(newSlot);
 
   }
 
+  return newIndex;
 
-  // Save a slot ..
-  
-  void saveSlot(Slot &slot) {
+}
 
-      slots[slot.slotNumber].chars[0] = slot.chars[0];
-      slots[slot.slotNumber].chars[1] = slot.chars[1];
-      slots[slot.slotNumber].chars[2] = slot.chars[2];
-      slots[slot.slotNumber].score = slot.score;
 
-  }
+// Save a slot ..
 
-};
+void saveSlot(Slot &slotToSave) {
+
+    slots[slotToSave.index].chars[0] = slotToSave.chars[0];
+    slots[slotToSave.index].chars[1] = slotToSave.chars[1];
+    slots[slotToSave.index].chars[2] = slotToSave.chars[2];
+    slots[slotToSave.index].score = slotToSave.score;
+
+}
 
 
 // -------------------------------------------------------------------------------
@@ -164,7 +145,6 @@ struct EEPROM_Utils {
 // -------------------------------------------------------------------------------
 
 Arduboy2 arduboy;
-EEPROM_Utils eeprom_Utils;
 
 enum GameState {
   Title_Init,
@@ -202,7 +182,7 @@ GameState gameState = GameState::Title_Init;
 void setup() {
 
 	arduboy.boot();
-  eeprom_Utils.initEEPROM();
+  initHighScoreTable();
 
 	gameState = GameState::Title_Init; 
 
@@ -327,7 +307,7 @@ void highScore_Init() {
 
   highScoreVars.slot.reset();
   highScoreVars.slot.score = gamePlayVars.score;
-  highScoreVars.slot.slotNumber = eeprom_Utils.saveScore(gamePlayVars.score);
+  highScoreVars.slot.index = saveScore(gamePlayVars.score);
 
   gameState = GameState::HighScore;
 
@@ -340,11 +320,11 @@ void highScore() {
 
   for (uint8_t x = 0; x < MAX_NUMBER_OF_SLOTS; x++) {
 
-    Slot slot = eeprom_Utils.getSlot(x);
+    Slot slot = getSlot(x);
 
     arduboy.setCursor(xOffset, yOffset);
 
-    if (x != highScoreVars.slot.slotNumber) {
+    if (x != highScoreVars.slot.index) {
 
 
       // Render existing score details ..
@@ -356,7 +336,7 @@ void highScore() {
     }
     else {
 
-      // Render new deatils ..
+      // Render new details ..
 
       arduboy.print(static_cast<char>(highScoreVars.slot.chars[0]));
       arduboy.print(static_cast<char>(highScoreVars.slot.chars[1]));
@@ -385,7 +365,7 @@ void highScore() {
 
   // Handle buttons ..
 
-  if (highScoreVars.slot.slotNumber != DO_NOT_EDIT_SLOT) {
+  if (highScoreVars.slot.index != DO_NOT_EDIT_SLOT) {
 
     if (arduboy.justPressed(UP_BUTTON))       { highScoreVars.slot.incChar(); }
     if (arduboy.justPressed(DOWN_BUTTON))     { highScoreVars.slot.decChar(); }
@@ -394,7 +374,7 @@ void highScore() {
 
     if (arduboy.justPressed(A_BUTTON)) { 
       
-      eeprom_Utils.saveSlot(highScoreVars.slot);
+      saveSlot(highScoreVars.slot);
       highScoreVars.slot.reset(); 
       gamePlayVars.reset();
       
